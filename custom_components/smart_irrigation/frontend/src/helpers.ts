@@ -567,3 +567,39 @@ export function changedFields(
   }
   return changes;
 }
+
+/**
+ * The rain sources the setup assistant asks for.
+ *
+ * Rain is not read by an engine: it reaches the bucket whatever the engine, so
+ * it is not among an engine's ``consumes``, and asking only for those left an
+ * outdoor zone without any rain at all. Outdoors, on the paths that ask for
+ * sensors, both rain fields are offered: a sensor of the rate (mm/h) or the
+ * total of a gauge (mm), either is enough. A fixed amount asks for nothing.
+ */
+export function setupRainToAsk(weather: string, underGlass: boolean): string[] {
+  if (underGlass) return [];
+  if (weather === "sensors" || weather === "et") {
+    return [MAPPING_CURRENT_PRECIPITATION, MAPPING_PRECIPITATION];
+  }
+  return [];
+}
+
+/**
+ * Where an outdoor zone made by the assistant takes its rain from, when no
+ * sensor was chosen for it: the weather service's rate when one is in use, and
+ * none otherwise. The service has no total of a gauge to give.
+ */
+export function setupRainFromService(
+  quantity: string,
+  weather: string,
+  underGlass: boolean,
+  usesWeatherService: boolean,
+): boolean {
+  return (
+    !underGlass &&
+    usesWeatherService &&
+    weather !== "static" &&
+    quantity === MAPPING_CURRENT_PRECIPITATION
+  );
+}

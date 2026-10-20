@@ -144,7 +144,9 @@
           "lux-hint": "Under glass a light sensor can stand in for solar radiation: pick your illuminance entity here and set its source to Light sensor (lux) afterwards, in the sensor group.",
           "static-question": "How much does it evaporate per day?",
           "static-help": "A depth of water, in the unit your zones use. Somewhere around 4 to 5 mm a day is common for a temperate summer.",
-          "static-label": "Evaporation per day"
+          "static-label": "Evaporation per day",
+          "rain-help": "For the rain, one of the two is enough: a sensor of the rate (mm/h) or the total of a rain gauge (mm). Left empty, no rain is counted, and the zone is watered after every shower.",
+          "rain-help-service": "For the rain, one of the two is enough: a sensor of the rate (mm/h) or the total of a rain gauge (mm). Left empty, the rain comes from the weather service."
         },
         "review": {
           "question": "Ready to create",

@@ -20,6 +20,8 @@ import {
   displayVolume,
   getOptionsForMappingType,
   missingRequiredSources,
+  setupRainFromService,
+  setupRainToAsk,
   setupZoneMethod,
 } from "./helpers";
 
@@ -227,5 +229,82 @@ describe("setupZoneMethod", () => {
 
   it("leaves an engine it does not know to the integration", () => {
     expect(setupZoneMethod("SomethingElse")).toEqual({});
+  });
+});
+
+/**
+ * The assistant asked only for what the engine reads, and rain is read by no
+ * engine: an outdoor zone it made had no rain at all, and was watered after
+ * every shower.
+ */
+describe("setupRainToAsk", () => {
+  it.each(["sensors", "et"])(
+    "asks for rain outdoors on the %s path",
+    (weather) => {
+      expect(setupRainToAsk(weather, false)).toEqual([
+        MAPPING_CURRENT_PRECIPITATION,
+        MAPPING_PRECIPITATION,
+      ]);
+    },
+  );
+
+  it("asks for no rain under glass", () => {
+    expect(setupRainToAsk("sensors", true)).toEqual([]);
+  });
+
+  it("asks nothing on the service path, which brings its own rain", () => {
+    expect(setupRainToAsk("service", false)).toEqual([]);
+  });
+
+  it("asks nothing for a fixed amount", () => {
+    expect(setupRainToAsk("static", false)).toEqual([]);
+  });
+});
+
+describe("setupRainFromService", () => {
+  it("takes the service's rain rate outdoors when a service is in use", () => {
+    for (const weather of ["service", "sensors", "et"]) {
+      expect(
+        setupRainFromService(
+          MAPPING_CURRENT_PRECIPITATION,
+          weather,
+          false,
+          true,
+        ),
+      ).toBe(true);
+    }
+  });
+
+  it("never takes a gauge total from the service", () => {
+    expect(
+      setupRainFromService(MAPPING_PRECIPITATION, "service", false, true),
+    ).toBe(false);
+  });
+
+  it("takes nothing without a service, under glass, or for a fixed amount", () => {
+    expect(
+      setupRainFromService(
+        MAPPING_CURRENT_PRECIPITATION,
+        "sensors",
+        false,
+        false,
+      ),
+    ).toBe(false);
+    expect(
+      setupRainFromService(
+        MAPPING_CURRENT_PRECIPITATION,
+        "service",
+        true,
+        true,
+      ),
+    ).toBe(false);
+    expect(
+      setupRainFromService(
+        MAPPING_CURRENT_PRECIPITATION,
+        "static",
+        false,
+        true,
+      ),
+    ).toBe(false);
   });
 });

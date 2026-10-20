@@ -144,7 +144,9 @@
           "lux-hint": "Unter Glas kann ein Lichtsensor die Sonnenstrahlung ersetzen: wähle hier deine Beleuchtungsstärke-Entität und setze ihre Quelle danach in der Sensorgruppe auf Lichtsensor (Lux).",
           "static-question": "Wie viel verdunstet pro Tag?",
           "static-help": "Eine Wasserhöhe, in der Einheit deiner Zonen. Etwa 4 bis 5 mm pro Tag ist für einen gemäßigten Sommer üblich.",
-          "static-label": "Verdunstung pro Tag"
+          "static-label": "Verdunstung pro Tag",
+          "rain-help": "Für den Regen genügt eines der beiden: ein Sensor der Rate (mm/h) oder die Summe eines Regenmessers (mm). Bleiben beide leer, wird kein Regen eingerechnet, und die Zone wird nach jedem Schauer bewässert.",
+          "rain-help-service": "Für den Regen genügt eines der beiden: ein Sensor der Rate (mm/h) oder die Summe eines Regenmessers (mm). Bleiben beide leer, kommt der Regen vom Wetterdienst."
         },
         "review": {
           "question": "Bereit zum Erstellen",

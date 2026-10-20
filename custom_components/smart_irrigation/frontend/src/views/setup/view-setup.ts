@@ -22,6 +22,8 @@ import {
   engineModeLabel,
   missingRequiredSources,
   output_unit,
+  setupRainFromService,
+  setupRainToAsk,
   setupZoneMethod,
 } from "../../helpers";
 import { globalStyle } from "../../styles/global-style";
@@ -183,11 +185,24 @@ class SmartIrrigationViewSetup extends LitElement {
     );
   }
 
+  /**
+   * The rain to ask for: outdoors, whatever the engine, since rain reaches the
+   * bucket without passing through it (see setupRainToAsk).
+   */
+  private get rainToAsk(): string[] {
+    return setupRainToAsk(this.weather, this.underGlass);
+  }
+
   /** Sources the user has to point at an entity, given how they answered. */
   private get sensorsToAsk(): string[] {
     if (this.weather === "static") return [];
-    if (this.weather === "et") return [MAPPING_EVAPOTRANSPIRATION];
-    if (this.weather === "sensors") return this.sourcesToAsk;
+    if (this.weather === "et")
+      return [MAPPING_EVAPOTRANSPIRATION, ...this.rainToAsk];
+    if (this.weather === "sensors")
+      return [
+        ...this.sourcesToAsk.filter((s) => !this.rainToAsk.includes(s)),
+        ...this.rainToAsk,
+      ];
     // The weather service supplies everything it can; rain indoors is not a
     // thing, and nothing else needs asking.
     return [];
@@ -198,6 +213,12 @@ class SmartIrrigationViewSetup extends LitElement {
     const requires = this.engine?.requires;
     if (!requires) return [];
     return this.sensorsToAsk.filter((s) => !requires.includes(s));
+  }
+
+  /** What the engine requires, which is never the rain: either field will do. */
+  private get requiredToAsk(): string[] | undefined {
+    const requires = this.engine?.requires;
+    return requires?.filter((s) => !this.rainToAsk.includes(s));
   }
 
   private get steps(): string[] {
@@ -225,8 +246,8 @@ class SmartIrrigationViewSetup extends LitElement {
         if (this.weather === "static") return Number(this.staticDelta) > 0;
         return (
           missingRequiredSources(
-            this.sensorsToAsk,
-            this.engine?.requires,
+            this.sensorsToAsk.filter((s) => !this.rainToAsk.includes(s)),
+            this.requiredToAsk,
             this.sensors,
           ).length === 0
         );
@@ -457,6 +478,15 @@ class SmartIrrigationViewSetup extends LitElement {
       ${this.optionalToAsk.length
         ? html`<div class="note">${this.t("steps.sensors.help-optional")}</div>`
         : ""}
+      ${this.rainToAsk.length
+        ? html`<div class="note">
+            ${this.t(
+              this.usesWeatherService
+                ? "steps.sensors.rain-help-service"
+                : "steps.sensors.rain-help",
+            )}
+          </div>`
+        : ""}
       ${this.underGlass && this.sensorsToAsk.includes(MAPPING_SOLRAD)
         ? html`<div class="note">${this.t("steps.sensors.lux-hint")}</div>`
         : ""}
@@ -464,7 +494,8 @@ class SmartIrrigationViewSetup extends LitElement {
         (source) => html`
           <div class="setting-row">
             <div class="setting-label">
-              ${source}${this.optionalToAsk.includes(source)
+              ${source}${this.optionalToAsk.includes(source) ||
+              this.rainToAsk.includes(source)
                 ? html` <span class="step-count"
                     >(${this.t("steps.sensors.optional")})</span
                   >`
@@ -548,7 +579,15 @@ class SmartIrrigationViewSetup extends LitElement {
         [MAPPING_CONF_UNIT]: "",
       };
     }
-    if (this.weather === "service" && this.sourcesToAsk.includes(quantity)) {
+    if (
+      (this.weather === "service" && this.sourcesToAsk.includes(quantity)) ||
+      setupRainFromService(
+        quantity,
+        this.weather,
+        this.underGlass,
+        this.usesWeatherService,
+      )
+    ) {
       return {
         [MAPPING_CONF_SOURCE]: MAPPING_CONF_SOURCE_WEATHER_SERVICE,
         [MAPPING_CONF_SENSOR]: "",
